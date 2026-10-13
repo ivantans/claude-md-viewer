@@ -30,9 +30,14 @@ If you try the Windows or Linux build, reports about what works and what does no
 
 ## Install
 
-There is no signed release yet, so you build it yourself. The first build downloads and compiles the Rust dependencies and takes a few minutes; later builds take well under a minute.
+### Download
 
-Every pull request and every push to `main` is also built by [GitHub Actions](.github/workflows/build.yml) for all three platforms. The unsigned installers are attached to each workflow run as artifacts, if you would rather not install a toolchain.
+Installers for macOS (`.dmg`), Windows (`-setup.exe`), and Linux (`.deb`, `.rpm`) are on the [Releases page](https://github.com/ivantans/claude-md-viewer/releases). They are built by [GitHub Actions](.github/workflows/build.yml) and are **not signed**:
+
+- **macOS**: after moving the app to Applications, remove the quarantine flag once, or macOS will refuse to open it: `xattr -dr com.apple.quarantine "/Applications/Claude MD Viewer.app"`
+- **Windows**: SmartScreen asks for confirmation (More info → Run anyway).
+
+If you would rather not run unsigned binaries, build it yourself as described below. The first build downloads and compiles the Rust dependencies and takes a few minutes; later builds take well under a minute.
 
 ### Prerequisites
 
@@ -81,7 +86,7 @@ The results are written to `src-tauri/target/release/bundle/`:
 | Windows | `nsis/*-setup.exe` | Run the installer (installs for the current user, no administrator rights needed) |
 | Linux | `deb/*.deb` and `rpm/*.rpm` | `sudo apt install ./<file>.deb` or `sudo dnf install ./<file>.rpm` |
 
-Because you built the app locally, macOS opens it without a Gatekeeper warning. An app downloaded from a CI run is unsigned: macOS will refuse to open it until you remove the quarantine flag (`xattr -dr com.apple.quarantine "Claude MD Viewer.app"`), and Windows SmartScreen will ask for confirmation.
+An app you built locally opens on macOS without a Gatekeeper warning.
 
 To run from source while working on the code, use `cargo tauri dev` in `src-tauri`.
 
@@ -149,7 +154,7 @@ The serif font is whatever the system provides: New York on macOS, Georgia on Wi
 ## Known limitations
 
 - **Windows and Linux are untested.** They compile in CI, but nobody has yet confirmed on a real machine that file associations, drag and drop, menus and shortcuts, printing, themes, and fonts behave as intended. The Intel macOS build is cross-compiled in CI and equally untested.
-- No signed or notarized builds, and no prebuilt release downloads
+- Release builds are not signed or notarized
 - No syntax highlighting in code blocks
 - Only images are loaded from disk (PNG, JPEG, GIF, WebP, AVIF, SVG, BMP, ICO). Local audio and video embedded with raw HTML do not play, and images on Windows network shares (`\\server\share`) do not load.
 - Links with schemes other than `http`, `https`, and `mailto` are ignored, and links to local programs, scripts, or files marked executable are not opened
