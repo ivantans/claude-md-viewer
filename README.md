@@ -1,10 +1,29 @@
 # Claude MD Viewer
 
-A small Markdown viewer for macOS, Windows, and Linux with a reading experience modelled on the Markdown preview in the Claude app: warm dark surface, serif text, and rounded tables that are easy to scan.
+[![Latest release](https://img.shields.io/github/v/release/ivantans/claude-md-viewer)](https://github.com/ivantans/claude-md-viewer/releases/latest)
+[![Build](https://github.com/ivantans/claude-md-viewer/actions/workflows/build.yml/badge.svg)](https://github.com/ivantans/claude-md-viewer/actions/workflows/build.yml)
+[![Downloads](https://img.shields.io/github/downloads/ivantans/claude-md-viewer/total)](https://github.com/ivantans/claude-md-viewer/releases)
+[![License: MIT](https://img.shields.io/github/license/ivantans/claude-md-viewer)](LICENSE)
+
+A lightweight Markdown viewer for macOS, Windows, and Linux with a reading experience modelled on the Markdown preview in the Claude app: warm dark surface, serif text, and rounded tables that are easy to scan.
+
+It only *shows* Markdown — a `README.md`, a `CLAUDE.md`, notes written by an AI assistant — without opening an editor. The installers are **1–2 MB**: the app uses the web view that ships with your operating system instead of bundling a browser, so there is no Electron and no 100 MB download.
 
 > **Unofficial project.** Claude MD Viewer is a community-made tool. It is not affiliated with, sponsored by, or endorsed by Anthropic. "Claude" is a trademark of Anthropic, used here only to describe the look this viewer is inspired by.
 
 ![Claude MD Viewer showing a Markdown document with a table and a code block](docs/screenshot.png)
+
+## Download
+
+| Platform | Download | Size |
+|---|---|---|
+| macOS, Apple Silicon (M1 and later) | [Claude-MD-Viewer-macOS-Apple-Silicon.dmg](https://github.com/ivantans/claude-md-viewer/releases/latest/download/Claude-MD-Viewer-macOS-Apple-Silicon.dmg) | 1.5 MB |
+| macOS, Intel | [Claude-MD-Viewer-macOS-Intel.dmg](https://github.com/ivantans/claude-md-viewer/releases/latest/download/Claude-MD-Viewer-macOS-Intel.dmg) | 1.7 MB |
+| Windows 10 / 11 | [Claude-MD-Viewer-Windows-x64-setup.exe](https://github.com/ivantans/claude-md-viewer/releases/latest/download/Claude-MD-Viewer-Windows-x64-setup.exe) | 1.2 MB |
+| Debian / Ubuntu | [Claude-MD-Viewer-Linux-amd64.deb](https://github.com/ivantans/claude-md-viewer/releases/latest/download/Claude-MD-Viewer-Linux-amd64.deb) | 1.9 MB |
+| Fedora / openSUSE | [Claude-MD-Viewer-Linux-x86_64.rpm](https://github.com/ivantans/claude-md-viewer/releases/latest/download/Claude-MD-Viewer-Linux-x86_64.rpm) | 1.9 MB |
+
+The builds are **not signed**, so the first launch needs one extra step. See [Install](#install).
 
 ## Features
 
@@ -30,16 +49,45 @@ If you try the Windows or Linux build, reports about what works and what does no
 
 ## Install
 
-### Download
+The installers under [Download](#download) are built by [GitHub Actions](.github/workflows/build.yml) from this repository. They are not signed or notarized, which is why each system asks once before running them.
 
-Installers for macOS (`.dmg`), Windows (`-setup.exe`), and Linux (`.deb`, `.rpm`) are on the [Releases page](https://github.com/ivantans/claude-md-viewer/releases). They are built by [GitHub Actions](.github/workflows/build.yml) and are **not signed**:
+### macOS
 
-- **macOS**: after moving the app to Applications, remove the quarantine flag once, or macOS will refuse to open it: `xattr -dr com.apple.quarantine "/Applications/Claude MD Viewer.app"`
-- **Windows**: SmartScreen asks for confirmation (More info → Run anyway).
+The quickest way is one line in Terminal. It downloads the right build for your Mac and puts it in Applications; because the download does not go through a browser, macOS does not block the app:
 
-If you would rather not run unsigned binaries, build it yourself as described below. The first build downloads and compiles the Rust dependencies and takes a few minutes; later builds take well under a minute.
+```bash
+curl -fsSL https://raw.githubusercontent.com/ivantans/claude-md-viewer/main/scripts/install.sh | sh
+```
 
-### Prerequisites
+Or install the `.dmg` by hand:
+
+1. Open the `.dmg` and drag **Claude MD Viewer** to Applications. Not sure which one you need? Apple menu → About This Mac: a chip named "Apple M…" means Apple Silicon.
+2. Open the app once. macOS says it could not verify the app; click **Done**.
+3. Open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**.
+
+This is needed only the first time.
+
+### Windows
+
+Run the installer. SmartScreen asks for confirmation: click **More info → Run anyway**. It installs for the current user and does not need administrator rights.
+
+### Linux
+
+```bash
+sudo apt install ./Claude-MD-Viewer-Linux-amd64.deb
+```
+
+```bash
+sudo dnf install ./Claude-MD-Viewer-Linux-x86_64.rpm
+```
+
+WebKitGTK 4.1 must be available from your distribution (Ubuntu 22.04 or later, current Fedora).
+
+### Build from source
+
+If you would rather not run unsigned binaries, build it yourself. The first build downloads and compiles the Rust dependencies and takes a few minutes; later builds take well under a minute.
+
+#### Prerequisites
 
 All platforms need [Rust](https://rustup.rs) (stable) and the Tauri command line tool:
 
@@ -70,7 +118,7 @@ Then, per platform:
 
 Node.js is not needed: the user interface is plain HTML, CSS, and JavaScript with no build step.
 
-### Build
+#### Build
 
 ```bash
 git clone https://github.com/ivantans/claude-md-viewer.git
@@ -140,10 +188,9 @@ src-tauri/src/main.rs        The shell: windows, menus, file watching, links, im
 src-tauri/tauri.conf.json    App metadata, content security policy, installers, file associations
 src-tauri/capabilities/      What the page is allowed to ask the shell to do
 src-tauri/icons/             App icon (icon.svg is the source)
+scripts/install.sh           One-line installer for macOS
 .github/workflows/build.yml  Builds for macOS, Windows, and Linux on every push and pull request
 ```
-
-Earlier versions were a native Swift (AppKit) app for macOS only. It was replaced rather than kept alongside so there is one shell to maintain; it is still available in the Git history (commit `092cb6e`).
 
 ### Changing the look
 
