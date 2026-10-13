@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Original artwork for Claude MD Viewer: a Markdown heading and three lines of text. -->
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="#1c1b19"/>
+  <rect x="103" y="103" width="818" height="818" rx="183" fill="none" stroke="#3a3833" stroke-width="6"/>
+  <g stroke="#d97757" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M300 300 284 420M362 300 346 420M262 338H390M254 384H382"/>
+  </g>
+  <rect x="446" y="332" width="318" height="58" rx="29" fill="#f3f1ea"/>
+  <rect x="258" y="500" width="508" height="40" rx="20" fill="#a09d94"/>
+  <rect x="258" y="592" width="508" height="40" rx="20" fill="#a09d94"/>
+  <rect x="258" y="684" width="330" height="40" rx="20" fill="#a09d94"/>
+</svg>
