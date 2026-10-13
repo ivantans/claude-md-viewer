@@ -1,4 +1,7 @@
-// Renders the Markdown sent by the app (see Sources/main.swift) into #content.
+// Renders the Markdown sent by the app shell (see src-tauri/src/main.rs) into #content.
+// The shell calls render(), openFind(), findNext() and toggleTOC(); this page calls back
+// through Tauri's invoke() for the two things it cannot do itself (see the end of the file).
+const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : () => Promise.resolve();
 const content = document.getElementById('content');
 const toc = document.getElementById('toc');
 const breadcrumb = document.getElementById('breadcrumb');
@@ -26,7 +29,7 @@ function slugify(text, used) {
   return slug;
 }
 
-// Called from Swift with { markdown, name, folder, baseURL, keepScroll }.
+// Called by the shell with { markdown, name, folder, baseURL, keepScroll }.
 function render(doc) {
   const scrollY = doc.keepScroll ? window.scrollY : 0;
 
@@ -35,10 +38,14 @@ function render(doc) {
   if (!base) { base = document.createElement('base'); document.head.appendChild(base); }
   base.href = doc.baseURL;
 
-  const markdown = doc.markdown.replace(/^---\n[\s\S]*?\n---\n/, ''); // skip YAML front matter
+  const markdown = doc.markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''); // skip YAML front matter
   const template = document.createElement('template');
   template.innerHTML = marked.parse(markdown, { gfm: true });
   sanitize(template.content);
+  // Absolute file:// URLs are served by the shell from the same origin as the base URL.
+  template.content.querySelectorAll('[src^="file://" i]').forEach((el) => {
+    el.setAttribute('src', new URL(new URL(el.getAttribute('src')).pathname, doc.baseURL).href);
+  });
   content.replaceChildren(template.content);
 
   content.querySelectorAll('table').forEach((table) => {
@@ -90,18 +97,27 @@ function render(doc) {
   markActiveHeading();
 }
 
-// Anchor links: with <base> set, "#section" would resolve against the folder, so handle them here.
-document.addEventListener('click', (event) => {
+// Links never replace the viewer page. Anchor links scroll in place (with <base> set, "#section"
+// would resolve against the folder); everything else is handed to the shell, which opens other
+// Markdown files in a new window and the rest in the default browser or app.
+function followLink(event) {
   const link = event.target.closest('a[href]');
   if (!link) return;
+  event.preventDefault();
+  if (event.type !== 'click') return; // middle click
   const href = link.getAttribute('href');
   if (href.startsWith('#')) {
-    event.preventDefault();
-    const target = document.getElementById(decodeURIComponent(href.slice(1)));
+    let id = href.slice(1);
+    try { id = decodeURIComponent(id); } catch (_) {}
+    const target = document.getElementById(id);
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (window.innerWidth < 1180) document.body.classList.remove('toc-open');
+  } else if (typeof link.href === 'string') {
+    invoke('open_link', { url: link.href });
   }
-});
+}
+document.addEventListener('click', followLink);
+document.addEventListener('auxclick', followLink);
 
 function markActiveHeading() {
   const headings = [...content.querySelectorAll('h1, h2, h3')];
@@ -131,7 +147,10 @@ function findNext(backwards) {
   const text = findInput.value;
   if (!text) return;
   findInput.blur();
-  if (!window.find(text, false, !!backwards, true)) { findInput.focus(); findInput.select(); }
+  findInput.value = ''; // otherwise window.find matches the query inside the find field itself
+  const found = window.find(text, false, !!backwards, true);
+  findInput.value = text;
+  if (!found) { findInput.focus(); findInput.select(); }
 }
 document.addEventListener('keydown', (event) => {
   if (findBar.hidden) return;
@@ -139,3 +158,25 @@ document.addEventListener('keydown', (event) => {
   else if (event.key === 'Escape') closeFind();
 });
 document.getElementById('find-close').addEventListener('click', closeFind);
+
+// Outside macOS the webview sees keys before the menu does, and WebView2 on Windows has its own
+// Ctrl+F, Ctrl+G, Ctrl+P and Ctrl+R. Catch the menu's shortcuts here and pass them to the shell.
+if (!/Mac/i.test(navigator.platform)) {
+  document.getElementById('toc-toggle').title = 'Table of contents (Ctrl+Shift+O)';
+  document.getElementById('open-shortcut').textContent = 'Ctrl+O';
+
+  const shortcuts = {
+    o: 'open', r: 'reload', p: 'print', w: 'close', q: 'quit', f: 'find', g: 'find-next',
+    'shift+o': 'toc', '=': 'zoom-in', '+': 'zoom-in', 'shift+=': 'zoom-in', 'shift++': 'zoom-in', '-': 'zoom-out', 0: 'zoom-reset',
+  };
+  document.addEventListener('keydown', (event) => {
+    if (!event.ctrlKey || event.altKey || event.metaKey) return;
+    const id = shortcuts[(event.shiftKey ? 'shift+' : '') + event.key.toLowerCase()];
+    if (!id) return;
+    event.preventDefault();
+    invoke('action', { id });
+  });
+}
+
+// Tell the shell the page is ready; it answers by calling render() if this window has a file.
+invoke('ready');

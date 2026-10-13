@@ -2,6 +2,34 @@
 
 Claude MD Viewer bundles the following software.
 
+## Rust crates (the application shell)
+
+The executable is built with [Tauri](https://github.com/tauri-apps/tauri) and statically links the Rust crates pinned in `src-tauri/Cargo.lock`. The ones this project depends on directly:
+
+| Crate | License |
+|---|---|
+| [tauri](https://github.com/tauri-apps/tauri), with [wry](https://github.com/tauri-apps/wry) and [muda](https://github.com/tauri-apps/muda) | Apache-2.0 OR MIT |
+| [tao](https://github.com/tauri-apps/tao) | Apache-2.0 |
+| [tauri-plugin-dialog](https://github.com/tauri-apps/plugins-workspace), with [rfd](https://github.com/PolyMeilex/rfd) (MIT) | Apache-2.0 OR MIT |
+| [tauri-plugin-single-instance](https://github.com/tauri-apps/plugins-workspace) | Apache-2.0 OR MIT |
+| [serde_json](https://github.com/serde-rs/json) | MIT OR Apache-2.0 |
+| [open](https://github.com/Byron/open-rs) | MIT |
+
+Their transitive dependencies (about 220 crates on macOS and Windows, about 290 on Linux) are almost all under MIT, Apache-2.0, or both. The exceptions are:
+
+- **MPL-2.0**: [cssparser](https://github.com/servo/rust-cssparser), cssparser-macros, [selectors](https://github.com/servo/stylo), [dtoa-short](https://github.com/upsuper/dtoa-short) and [option-ext](https://github.com/soc/option-ext). They are used unmodified; their source is available at the linked repositories and on crates.io.
+- **BSD-3-Clause**: [brotli](https://github.com/dropbox/rust-brotli) and brotli-decompressor (also MIT), alloc-no-stdlib and alloc-stdlib.
+- **Unicode-3.0**: the [ICU4X](https://github.com/unicode-org/icu4x) crates (`icu_*`, `zerovec`, `yoke`, `litemap`, `tinystr`, `writeable` and related).
+- **Zlib**: [foldhash](https://github.com/orlp/foldhash).
+
+To print every crate with its license for your platform:
+
+```bash
+cd src-tauri && cargo tree -e normal --prefix none --format "{p} {l}" | sort -u
+```
+
+The web view itself is not bundled: the app uses WKWebView on macOS, Microsoft Edge WebView2 on Windows, and WebKitGTK on Linux, as installed on the system.
+
 ## marked 12.0.2
 
 https://github.com/markedjs/marked — bundled as `Resources/marked.min.js`. Its license file is reproduced below.

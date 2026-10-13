@@ -1,0 +1,26 @@
+[package]
+name = "claude-md-viewer"
+version = "1.1.0"
+description = "A small Markdown viewer with a look modelled on the Markdown preview in the Claude app"
+authors = ["Ivan Tanjaya Sutrisna"]
+license = "MIT"
+repository = "https://github.com/ivantans/claude-md-viewer"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+serde_json = "1"
+open = "5"
+
+# Small binaries matter more than build time here.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

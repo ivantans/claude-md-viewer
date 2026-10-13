@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Claude MD Viewer",
+  "identifier": "io.github.ivantans.claude-md-viewer",
+  "build": {
+    "frontendDist": "../Resources"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' mdfile: http://mdfile.localhost data: https: http:; connect-src ipc: http://ipc.localhost; base-uri mdfile: http://mdfile.localhost; form-action 'none'; frame-src 'none'; object-src 'none'",
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "deb", "rpm"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "category": "Productivity",
+    "shortDescription": "A small Markdown viewer",
+    "longDescription": "An unofficial, community-made Markdown viewer with a look modelled on the Markdown preview in the Claude app. Not affiliated with or endorsed by Anthropic.",
+    "copyright": "Copyright (c) 2026 Ivan Tanjaya Sutrisna",
+    "license": "MIT",
+    "homepage": "https://github.com/ivantans/claude-md-viewer",
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown", "mkd"],
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "mimeType": "text/markdown",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    }
+  }
+}

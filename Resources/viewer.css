@@ -12,9 +12,11 @@
   --code-inline: #2a2926;
   --accent: #d97757;
   --highlight: rgba(217, 119, 87, 0.16);
-  --serif: ui-serif, "New York", "Iowan Old Style", Charter, Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  /* macOS resolves to New York / SF. Windows falls through to Georgia, Segoe UI and Cascadia Mono
+     or Consolas; Linux to Source Serif, Noto or DejaVu, whichever is installed. */
+  --serif: ui-serif, "New York", "Iowan Old Style", Charter, "Source Serif 4", "Source Serif Pro", Georgia, Cambria, "Noto Serif", "DejaVu Serif", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", "Noto Sans", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
 }
 @media (prefers-color-scheme: light) {
   :root {
