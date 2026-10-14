@@ -57,14 +57,25 @@ body {
   font-family: var(--sans); font-size: 13px; color: var(--muted);
   user-select: none;
 }
-#breadcrumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#breadcrumb { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #breadcrumb b { color: var(--text); font-weight: 500; }
-#toc-toggle, #find-close {
-  display: grid; place-items: center;
+#toc-toggle, #find-close, #default-dismiss {
+  display: grid; place-items: center; flex: none;
   width: 26px; height: 26px; padding: 0;
   border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
 }
-#toc-toggle:hover, #find-close:hover { background: var(--row-head); color: var(--text); }
+#toc-toggle:hover, #find-close:hover, #default-dismiss:hover { background: var(--row-head); color: var(--text); }
+
+/* ---- Offer to become the default app for Markdown files ---- */
+#default-offer { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+#default-offer[hidden] { display: none; }
+#default-accept {
+  font: inherit; font-size: 12px; padding: 3px 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--row-head); color: var(--text); cursor: pointer;
+}
+#default-accept:hover { border-color: var(--accent); }
+@media (max-width: 760px) { #default-offer span { display: none; } }
 
 /* ---- Table of contents ---- */
 #toc {
