@@ -1,6 +1,6 @@
 [package]
 name = "claude-md-viewer"
-version = "1.1.0"
+version = "1.2.0"
 description = "A small Markdown viewer with a look modelled on the Markdown preview in the Claude app"
 authors = ["Ivan Tanjaya Sutrisna"]
 license = "MIT"
