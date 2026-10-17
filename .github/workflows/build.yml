@@ -64,12 +64,23 @@ jobs:
         if: runner.os == 'Linux'
         run: dpkg-deb -c src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
 
+      # The names match the download links in the README, which point at the latest release.
+      - name: Collect installers
+        shell: bash
+        run: |
+          bundle="src-tauri/target/${{ matrix.target }}/release/bundle"
+          mkdir dist
+          case "${{ matrix.target }}" in
+            aarch64-apple-darwin) cp "$bundle"/dmg/*.dmg dist/Claude-MD-Viewer-macOS-Apple-Silicon.dmg ;;
+            x86_64-apple-darwin) cp "$bundle"/dmg/*.dmg dist/Claude-MD-Viewer-macOS-Intel.dmg ;;
+            x86_64-pc-windows-msvc) cp "$bundle"/nsis/*.exe dist/Claude-MD-Viewer-Windows-x64-setup.exe ;;
+            x86_64-unknown-linux-gnu)
+              cp "$bundle"/deb/*.deb dist/Claude-MD-Viewer-Linux-amd64.deb
+              cp "$bundle"/rpm/*.rpm dist/Claude-MD-Viewer-Linux-x86_64.rpm ;;
+          esac
+
       - uses: actions/upload-artifact@v4
         with:
           name: claude-md-viewer-${{ matrix.target }}
           if-no-files-found: error
-          path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+          path: dist/*
