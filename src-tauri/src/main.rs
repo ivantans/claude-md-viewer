@@ -68,6 +68,8 @@ struct Settings {
     theme: String,
     width: f64,
     height: f64,
+    // Whether to offer becoming the default app for Markdown files; false once dismissed.
+    offer_default: bool,
 }
 
 #[derive(Default)]
@@ -129,6 +131,7 @@ fn with_settings<T>(app: &AppHandle, f: impl FnOnce(&mut Settings) -> T) -> T {
             },
             width: saved["width"].as_f64().filter(|w| (480.0..=10000.0).contains(w)).unwrap_or(1040.0),
             height: saved["height"].as_f64().filter(|h| (360.0..=10000.0).contains(h)).unwrap_or(900.0),
+            offer_default: saved["offerDefault"].as_bool().unwrap_or(true),
         }
     });
     f(settings)
@@ -136,7 +139,9 @@ fn with_settings<T>(app: &AppHandle, f: impl FnOnce(&mut Settings) -> T) -> T {
 
 fn save_settings(app: &AppHandle) {
     let Some(file) = settings_file(app) else { return };
-    let saved = with_settings(app, |s| json!({ "theme": s.theme, "width": s.width, "height": s.height }));
+    let saved = with_settings(app, |s| {
+        json!({ "theme": s.theme, "width": s.width, "height": s.height, "offerDefault": s.offer_default })
+    });
     if let Some(dir) = file.parent() {
         let _ = fs::create_dir_all(dir);
     }
@@ -348,6 +353,90 @@ fn watch_files(app: AppHandle) {
     }
 }
 
+// MARK: Default app for Markdown files
+
+#[cfg(target_os = "macos")]
+mod default_app {
+    use core_foundation::{
+        base::TCFType,
+        string::{CFString, CFStringRef},
+    };
+    use tauri::AppHandle;
+
+    pub const BUTTON: &str = "Set as default";
+    pub const CAN_CHECK: bool = true;
+    const MARKDOWN: &str = "net.daringfireball.markdown";
+    const ALL_ROLES: u32 = 0xFFFF_FFFF; // kLSRolesAll
+
+    #[link(name = "CoreServices", kind = "framework")]
+    extern "C" {
+        fn LSCopyDefaultRoleHandlerForContentType(content_type: CFStringRef, role: u32) -> CFStringRef;
+        fn LSSetDefaultRoleHandlerForContentType(content_type: CFStringRef, role: u32, handler: CFStringRef) -> i32;
+    }
+
+    pub fn is_default(app: &AppHandle) -> bool {
+        let content_type = CFString::new(MARKDOWN);
+        let handler = unsafe { LSCopyDefaultRoleHandlerForContentType(content_type.as_concrete_TypeRef(), ALL_ROLES) };
+        if handler.is_null() {
+            return false;
+        }
+        let handler = unsafe { CFString::wrap_under_create_rule(handler) }.to_string();
+        handler.eq_ignore_ascii_case(&app.config().identifier)
+    }
+
+    pub fn make_default(app: &AppHandle) -> bool {
+        let content_type = CFString::new(MARKDOWN);
+        let handler = CFString::new(&app.config().identifier);
+        let status = unsafe {
+            LSSetDefaultRoleHandlerForContentType(
+                content_type.as_concrete_TypeRef(),
+                ALL_ROLES,
+                handler.as_concrete_TypeRef(),
+            )
+        };
+        status == 0
+    }
+}
+
+// Windows does not let an app make itself the default, and has no simple way to ask whether it
+// is: the button opens the Default apps page of Settings and the offer is not shown again.
+#[cfg(windows)]
+mod default_app {
+    use tauri::AppHandle;
+
+    pub const BUTTON: &str = "Choose in Settings…";
+    pub const CAN_CHECK: bool = false;
+
+    pub fn is_default(_app: &AppHandle) -> bool {
+        false
+    }
+
+    pub fn make_default(_app: &AppHandle) -> bool {
+        open::that_detached("ms-settings:defaultapps").is_ok()
+    }
+}
+
+#[cfg(not(any(target_os = "macos", windows)))]
+mod default_app {
+    use std::process::Command;
+    use tauri::AppHandle;
+
+    pub const BUTTON: &str = "Set as default";
+    pub const CAN_CHECK: bool = true;
+    // The name the .deb and .rpm packages install the desktop entry under.
+    const DESKTOP_ENTRY: &str = "Claude MD Viewer.desktop";
+
+    pub fn is_default(_app: &AppHandle) -> bool {
+        let output = Command::new("xdg-mime").args(["query", "default", "text/markdown"]).output();
+        output.is_ok_and(|output| String::from_utf8_lossy(&output.stdout).trim() == DESKTOP_ENTRY)
+    }
+
+    pub fn make_default(_app: &AppHandle) -> bool {
+        let status = Command::new("xdg-mime").args(["default", DESKTOP_ENTRY, "text/markdown"]).status();
+        status.is_ok_and(|status| status.success())
+    }
+}
+
 // MARK: Commands called by the page (Resources/viewer.js)
 
 /// The page finished loading: render the window's file, if it has one.
@@ -357,6 +446,9 @@ fn ready(app: AppHandle, window: WebviewWindow) {
         document.page_loaded = true;
     }
     render(&app, window.label(), false);
+    if with_settings(&app, |s| s.offer_default) && !default_app::is_default(&app) {
+        let _ = window.eval(format!("offerDefault({})", json!(default_app::BUTTON)));
+    }
 }
 
 /// The path of a link that points into the file system, relative links included.
@@ -401,6 +493,20 @@ fn run_action(app: &AppHandle, window: Option<WebviewWindow>, id: &str) {
         "open" => return choose_files(app),
         "close" => return drop(window.or_else(|| active_window(app)).map(|window| window.close())),
         "quit" => return app.exit(0),
+        // The offer in the header: accepted, or dismissed with its close button.
+        "make-default" | "dismiss-default" => {
+            let accepted = id == "make-default" && default_app::make_default(app);
+            if id == "dismiss-default" || (accepted && !default_app::CAN_CHECK) {
+                with_settings(app, |s| s.offer_default = false);
+                save_settings(app);
+            }
+            if id == "dismiss-default" || accepted {
+                for window in app.webview_windows().values() {
+                    let _ = window.eval("hideDefaultOffer()");
+                }
+            }
+            return;
+        }
         "theme-dark" | "theme-light" | "theme-system" => {
             with_settings(app, |s| s.theme = id["theme-".len()..].into());
             save_settings(app);

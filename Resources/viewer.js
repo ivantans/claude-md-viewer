@@ -178,5 +178,16 @@ if (!/Mac/i.test(navigator.platform)) {
   });
 }
 
+// The shell calls offerDefault() when this app is not the default for Markdown files and the
+// offer has not been dismissed, and hideDefaultOffer() once it has been answered in any window.
+const defaultOffer = document.getElementById('default-offer');
+function offerDefault(label) {
+  document.getElementById('default-accept').textContent = label;
+  defaultOffer.hidden = false;
+}
+function hideDefaultOffer() { defaultOffer.hidden = true; }
+document.getElementById('default-accept').addEventListener('click', () => invoke('action', { id: 'make-default' }));
+document.getElementById('default-dismiss').addEventListener('click', () => invoke('action', { id: 'dismiss-default' }));
+
 // Tell the shell the page is ready; it answers by calling render() if this window has a file.
 invoke('ready');

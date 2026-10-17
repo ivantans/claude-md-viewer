@@ -33,6 +33,7 @@ The builds are **not signed**, so the first launch needs one extra step. See [In
 - Copy button on every code block
 - Find in document, zoom, and print (or save as PDF)
 - Dark, Light, and Match System themes
+- Offers once to become your default app for Markdown files, and stays quiet after you answer
 - Viewer only: it never modifies your files
 - Works offline; the Markdown parser is bundled
 - Lightweight: it uses the web view that ships with the operating system instead of bundling a browser, so the macOS app is about 3 MB
@@ -140,7 +141,9 @@ To run from source while working on the code, use `cargo tauri dev` in `src-taur
 
 ### Make it the default app for Markdown files
 
-The app registers itself as a viewer for `.md`, `.markdown`, `.mdown`, and `.mkd`. Making it the default is up to you:
+The app registers itself as a viewer for `.md`, `.markdown`, `.mdown`, and `.mkd`. Until it is the default, the bar at the top of the window offers to set it: **Set as default** does it for you on macOS and Linux, and on Windows opens the Default apps page of Settings, because Windows only lets you make that choice yourself. The **✕** next to it hides the offer for good.
+
+To do it by hand:
 
 - **macOS**: in Finder, select any `.md` file and press `⌘I` (Get Info). Under **Open with**, choose **Claude MD Viewer**, then click **Change All…**.
 - **Windows**: right-click any `.md` file, choose **Open with → Choose another app**, pick **Claude MD Viewer**, and select **Always**. (Or: Settings → Apps → Default apps, then search for `.md`.)
