@@ -171,3 +171,7 @@ Issues and pull requests are welcome. The codebase is intentionally small: one R
 ## License
 
 [MIT](LICENSE). Bundled third-party software is listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Author
+
+Built by [Ivan Tanjaya Sutrisna](https://ivantans.id), a backend developer in Bandung, Indonesia. More projects and contact: [ivantans.id](https://ivantans.id).
